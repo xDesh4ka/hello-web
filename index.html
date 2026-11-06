@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="slides-format" content="viewport">
+<title>Введение в DevOps — лекция</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:#fcfbf9;
+  --surface:#fff;
+  --stone-100:#f3f1ec;
+  --stone-200:#e6e2d8;
+  --muted:#78716c;
+  --text:#44403c;
+  --heading:#1c1917;
+  --indigo-50:#eef2ff;
+  --indigo-100:#e0e7ff;
+  --indigo:#4f46e5;
+  --indigo-dark:#4338ca;
+  --green:#059669;
+  --amber:#d97706;
+  --red:#dc2626;
+  --code-bg:#171923;
+  --scale:1;
+}
+* {box-sizing:border-box}
+html,body {
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,sans-serif;
+}
+button,select,input {font:inherit}
+button,select,summary {cursor:pointer}
+button:focus-visible,select:focus-visible,a:focus-visible {
+  outline:3px solid #a5b4fc;outline-offset:3px;
+}
+button {transition:background .2s,transform .2s}
+button:hover {filter:brightness(.97)}
+.progress {
+  position:fixed;top:0;left:0;height:5px;background:var(--indigo);
+  z-index:200;transition:width .25s;
+}
+.topbar {
+  min-height:68px;padding:12px max(20px,calc((100vw - 1260px)/2));
+  background:rgba(255,255,255,.95);border-bottom:1px solid var(--stone-200);
+  position:sticky;top:0;z-index:50;display:flex;
+  justify-content:space-between;align-items:center;gap:18px;
+  backdrop-filter:blur(12px);
+}
+.brand {display:flex;align-items:center;gap:12px}
+.logo {
+  width:40px;height:40px;border-radius:12px;background:var(--indigo);
+  color:white;display:grid;place-items:center;font-weight:900;
+}
+.brand b {color:var(--heading);display:block;font-size:14px}
+.brand small {color:var(--muted);font-size:11px}
+.mode {
+  display:flex;padding:4px;gap:3px;border:1px solid var(--stone-200);
+  border-radius:12px;background:var(--stone-100);
+}
+.mode button {
+  background:transparent;border:0;border-radius:8px;padding:8px 12px;
+  color:var(--text);font-size:12px;font-weight:800;
+}
+.mode button.active {
+  background:white;color:var(--indigo-dark);box-shadow:0 1px 4px #00000012;
+}
+.container {max-width:1260px;margin:auto;padding:22px}
+.controller {
+  display:grid;grid-template-columns:minmax(200px,1fr) auto auto;
+  gap:12px;align-items:center;padding:14px;border:1px solid var(--stone-200);
+  border-radius:17px;background:white;margin-bottom:18px;
+}
+.controller select {
+  width:100%;padding:11px 12px;color:var(--heading);background:var(--bg);
+  border:1px solid var(--stone-200);border-radius:11px;font-size:13px;
+}
+.badge {
+  padding:8px 11px;border-radius:9px;background:var(--indigo-50);
+  color:var(--indigo-dark);font-size:12px;font-weight:800;white-space:nowrap;
+}
+.controls {display:flex;gap:7px}
+.btn {
+  border:0;background:var(--stone-100);color:var(--text);
+  padding:10px 13px;border-radius:10px;font-size:12px;font-weight:800;
+}
+.btn.primary {color:white;background:var(--indigo)}
+.btn:disabled {opacity:.35;cursor:default}
+.screen {
+  width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;
+  border:1px solid var(--stone-200);border-radius:26px;background:white;
+  box-shadow:0 3px 12px #00000008;
+}
+.deck {
+  position:absolute;width:1200px;height:675px;
+  transform-origin:top left;transform:scale(var(--scale));
+}
+.slide {
+  position:absolute;inset:0;width:1200px;height:675px;
+  padding:30px 44px 22px;background:white;display:flex;flex-direction:column;
+  opacity:0;transform:scale(.97);pointer-events:none;
+  transition:opacity .45s ease,transform .45s ease;overflow:hidden;
+}
+.slide.active {
+  opacity:1;transform:scale(1);pointer-events:auto;z-index:2;
+}
+.gradient-mesh {
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;
+}
+.blob {
+  width:330px;height:330px;position:absolute;border-radius:50%;
+  background:#c7d2fe;filter:blur(75px);opacity:.075;
+  right:-90px;top:-100px;animation:drift 16s ease-in-out infinite;
+}
+.blob+.blob {
+  background:#ddd6fe;left:-100px;bottom:-160px;top:auto;
+  animation-delay:-7s;
+}
+@keyframes drift {
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(-25px,25px)}
+}
+.content {
+  position:relative;z-index:2;display:flex;flex-direction:column;
+  flex:1;min-height:0;
+}
+.eyebrow {
+  color:var(--indigo);font-size:12px;font-weight:800;
+  text-transform:uppercase;letter-spacing:1.6px;margin-bottom:10px;
+}
+h1,h2,h3,p {margin:0}
+h1 {font-size:48px;line-height:1.1;letter-spacing:-1.8px;color:var(--heading)}
+h2 {font-size:33px;line-height:1.15;letter-spacing:-1px;color:var(--heading)}
+.subtitle {font-size:17px;line-height:1.45;color:var(--muted);margin-top:10px}
+.body {
+  flex:1;min-height:0;display:flex;flex-direction:column;
+  justify-content:center;gap:16px;padding:18px 0;
+}
+.two {display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch}
+.three {display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.six {display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stack {display:grid;gap:14px}
+.card {
+  background:white;border:1px solid var(--stone-200);border-radius:17px;
+  padding:21px;box-shadow:0 2px 5px #00000003;
+  transition:transform .2s,box-shadow .2s;
+}
+.card:hover {transform:translateY(-3px);box-shadow:0 8px 18px #00000008}
+.card h3 {font-size:21px;color:var(--heading);margin-bottom:11px;line-height:1.2}
+.card p,.card li {font-size:18px;line-height:1.5}
+.card small {font-size:14px;line-height:1.5;color:var(--muted)}
+.card.good {border-top:4px solid var(--green);background:#f5fcf8}
+.card.bad {border-top:4px solid var(--red);background:#fff8f8}
+.card.accent {border-top:4px solid var(--indigo);background:#f8f9ff}
+.card.warn {border-top:4px solid var(--amber);background:#fffcf5}
+.card.compact {padding:16px}
+.card.compact h3 {font-size:19px;margin-bottom:7px}
+.card.compact p {font-size:16px}
+ul {margin:0;padding-left:22px}
+li {font-size:19px;line-height:1.5;margin:7px 0}
+li::marker {color:var(--indigo)}
+code,kbd {font-family:"JetBrains Mono",monospace}
+:not(pre)>code {
+  background:var(--indigo-50);color:var(--indigo-dark);
+  border-radius:5px;padding:2px 5px;font-size:.88em;
+}
+.code {
+  position:relative;border-radius:15px;overflow:hidden;
+  background:var(--code-bg);border:1px solid #292d3c;
+}
+.code-head {
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 14px;background:#242735;color:#b5bdcf;
+  font:11px "JetBrains Mono",monospace;letter-spacing:.4px;
+}
+.copy {
+  background:transparent;color:#cbd5e1;border:1px solid #4b5264;
+  border-radius:5px;padding:3px 8px;font:11px Inter,sans-serif;
+}
+pre {
+  margin:0;padding:17px 20px;color:#e2e8f0;
+  font:16px/1.45 "JetBrains Mono",monospace;
+  white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2;
+}
+.code.small pre {font-size:15px;line-height:1.4;padding:14px 18px}
+.code.bad {border-left:5px solid var(--red)}
+.code.good {border-left:5px solid var(--green)}
+.callout {
+  padding:14px 18px;border-radius:12px;background:var(--indigo-50);
+  border-left:4px solid var(--indigo);
+  font-size:18px;line-height:1.45;color:var(--indigo-dark);
+}
+.callout.warn {background:#fffbeb;border-color:var(--amber);color:#92400e}
+.callout.good {background:#ecfdf5;border-color:var(--green);color:#065f46}
+.callout.bad {background:#fef2f2;border-color:var(--red);color:#991b1b}
+.flow { 
+  display: flex;
+  flex-wrap: wrap; /* Разрешает перенос элементов на новые строки */
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  width: 100%; 
+}
+.node {
+  flex:1;background:var(--indigo-50);border:1px solid var(--indigo-100);
+  border-radius:15px;padding:18px 12px;text-align:center;
+  display:flex;flex-direction:column;justify-content:center;gap:9px;
+}
+.node strong {font-size:20px;color:var(--indigo-dark);line-height:1.25}
+.node small {font-size:15px;color:var(--text);line-height:1.4}
+.node.bad {background:#fef2f2;border-color:#fecaca}
+.node.bad strong {color:#b91c1c}
+.node.good {background:#ecfdf5;border-color:#a7f3d0}
+.node.good strong {color:#047857}
+.arrow {align-self:center;color:var(--indigo);font-size:27px;font-weight:800}
+table {width:100%;border-collapse:separate;border-spacing:0;font-size:17px}
+th {
+  text-align:left;padding:11px 14px;background:var(--indigo-50);
+  color:var(--indigo-dark);font-size:14px;
+}
+td {padding:10px 14px;border-bottom:1px solid var(--stone-200);line-height:1.35}
+tr:last-child td {border-bottom:0}
+.table-wrap {border:1px solid var(--stone-200);border-radius:14px;overflow:hidden}
+.pill {
+  display:inline-block;font-size:12px;font-weight:800;border-radius:7px;
+  padding:5px 8px;background:var(--indigo-50);color:var(--indigo-dark);
+}
+.big {font-size:30px;line-height:1.35;color:var(--heading);font-weight:800}
+.hero {display:grid;grid-template-columns:1.5fr .7fr;gap:34px;align-items:center}
+.hero-symbol {
+  font-size:110px;text-align:center;animation:float 5s ease-in-out infinite;
+}
+@keyframes float {50%{transform:translateY(-10px)}}
+.tags {display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.footer {
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding-top:12px;border-top:1px solid var(--stone-200);
+  font-size:11px;color:var(--muted);
+}
+.footer a {color:var(--muted);text-decoration:none}
+.footer a:hover {color:var(--indigo);text-decoration:underline}
+.reveal {opacity:1}
+.slide.active .reveal {animation:enter .35s ease both}
+.slide.active .reveal:nth-child(2) {animation-delay:.05s}
+@keyframes enter {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.slide-dots {display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:15px}
+.dot {
+  width:9px;height:9px;padding:0;border:0;border-radius:50%;
+  background:#d8d5ce;
+}
+.dot.active {background:var(--indigo);transform:scale(1.25)}
+.meta-row {
+  display:flex;justify-content:space-between;gap:12px;
+  margin-top:12px;font-size:12px;color:var(--muted);
+}
+.notes {
+  margin-top:18px;padding:20px 24px;background:#fff;border:1px solid var(--stone-200);
+  border-radius:17px;line-height:1.65;font-size:15px;
+}
+.notes[hidden] {display:none}
+.notes h3 {color:var(--heading);margin-bottom:10px;font-size:17px}
+.notes a {color:var(--indigo)}
+.notes p+p {margin-top:10px}
+.notes .time {color:var(--indigo);font-weight:800;margin-bottom:10px}
+.pyramid {display:grid;justify-items:center;gap:10px}
+.pyramid div {
+  text-align:center;padding:18px;border-radius:11px;font-weight:800;
+}
+.pyramid small {font-weight:400;display:block;margin-top:5px;font-size:15px}
+.pyramid .e2e {width:42%;background:#fef3c7;color:#92400e}
+.pyramid .integration {width:68%;background:var(--indigo-100);color:#3730a3}
+.pyramid .unit {width:94%;background:#d1fae5;color:#065f46}
+.checkline {display:flex;gap:10px;align-items:flex-start;font-size:18px;line-height:1.45}
+.tick {color:var(--green);font-weight:900}
+.steps {display:grid;gap:12px}
+.step {display:grid;grid-template-columns:36px 1fr;gap:13px;align-items:start}
+.step-num {
+  width:32px;height:32px;display:grid;place-items:center;border-radius:9px;
+  background:var(--indigo-50);color:var(--indigo);font-weight:900;
+}
+.step p {font-size:18px;line-height:1.4}
+.read .slide {
+  position:relative;opacity:1;transform:none;pointer-events:auto;
+  margin-bottom:24px;border-bottom:1px solid var(--stone-200);
+}
+.read .deck {height:auto}
+.read .screen {aspect-ratio:auto}
+.read .slide-dots {display:none}
+.present {overflow:hidden}
+.present .topbar,.present .controller,.present .meta-row,
+.present .slide-dots,.present .notes {display:none!important}
+.present .screen {
+  position:fixed;inset:0;width:100vw;height:100vh!important;
+  border:0;border-radius:0;background:var(--bg);z-index:100;
+}
+.present .deck {
+  left:50%;top:50%;transform-origin:center;
+  transform:translate(-50%,-50%) scale(var(--scale));
+}
+@media(max-width:750px) {
+  .topbar {padding:10px 12px;gap:8px}
+  .brand small {display:none}
+  .brand b {font-size:11px}
+  .container {padding:10px}
+  .controller {grid-template-columns:1fr auto;padding:10px}
+  .controller select {grid-column:1/-1}
+  .mode button {padding:8px;font-size:10px}
+  .meta-row {font-size:10px}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {animation:none!important;transition:none!important}
+}
+@media print {
+  @page {size:320mm 180mm;margin:0}
+  html,body {background:white}
+  .topbar,.controller,.notes,.meta-row,.slide-dots,.progress {display:none!important}
+  .container {max-width:none;margin:0;padding:0}
+  .screen {height:auto!important;width:1200px;overflow:visible;border:0;border-radius:0}
+  .deck {position:static;transform:none!important;height:auto}
+  .slide {
+    position:relative;opacity:1!important;transform:none!important;
+    width:1200px;height:675px;break-after:page;margin:0!important;
+  }
+  .slide:last-child {break-after:auto}
+  .gradient-mesh,.copy {display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">D</div>
+    <div>
+      <b id="deckTitle">Введение в DevOps</b>
+      <small id="deckSubtitle">Лекция · CI/CD, Docker, Jenkins, Ansible · ~80 минут</small>
+    </div>
+  </div>
+  <div class="mode">
+    <button id="slideMode" class="active" type="button">Слайды</button>
+    <button id="readMode" type="button">Чтение</button>
+    <button id="notesButton" type="button">Заметки</button>
+  </div>
+</header>
+
+<main class="container">
+  <div class="controller">
+    <select id="jump" aria-label="Перейти к слайду"></select>
+    <span class="badge" id="counter">1 / 1</span>
+    <div class="controls">
+      <button class="btn" id="prev" aria-label="Предыдущий слайд">←</button>
+      <button class="btn primary" id="next" aria-label="Следующий слайд">→</button>
+      <button class="btn" id="full" aria-label="Полный экран">⛶</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen">
+    <div class="deck" id="deck"></div>
+  </div>
+
+  <nav class="slide-dots" id="dots" aria-label="Навигация по слайдам"></nav>
+
+  <div class="meta-row">
+    <span>← → / Space — навигация · N — заметки · F — экран · R — чтение</span>
+    <span id="timing"></span>
+  </div>
+
+  <aside class="notes" id="notes" hidden aria-label="Заметки преподавателя"></aside>
+</main>
+
+<script>
+"use strict";
+
+const slides = [];
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+
+function code(lang, text, kind="") {
+  return `<div class="code ${kind} reveal">
+    <div class="code-head"><span>${esc(lang)}</span>
+      <button class="copy" type="button">Копировать</button>
+    </div><pre><code>${esc(text.trim())}</code></pre></div>`;
+}
+function card(title, body, kind="") {
+  return `<div class="card ${kind} reveal"><h3>${title}</h3>${body}</div>`;
+}
+function two(a,b) { return `<div class="two">${a}${b}</div>`; }
+function three(a,b,c) { return `<div class="three">${a}${b}${c}</div>`; }
+function callout(text, kind="") {
+  return `<div class="callout ${kind} reveal">${text}</div>`;
+}
+function table(head, rows) {
+  return `<div class="table-wrap reveal"><table>
+    <thead><tr>${head.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>`;
+}
+function flow(items) {
+  return `<div class="flow reveal">${items.map((x,i)=>
+    `${i?'<div class="arrow">→</div>':""}
+    <div class="node ${x[2]||""}"><strong>${x[0]}</strong><small>${x[1]||""}</small></div>`
+  ).join("")}</div>`;
+}
+function checks(items) {
+  return `<div class="stack">${items.map(t=>
+    `<div class="checkline reveal"><span class="tick">✓</span><span>${t}</span></div>`
+  ).join("")}</div>`;
+}
+function steps(items) {
+  return `<div class="steps">${items.map((t,i)=>
+    `<div class="step reveal"><span class="step-num">${i+1}</span><p>${t}</p></div>`
+  ).join("")}</div>`;
+}
+
+function add(title, subtitle, body, notes="", refs=[], duration=60, section=null) {
+  slides.push({
+    title, subtitle, body,
+    notes: notes || "",
+    refs: refs || [],
+    duration,
+    section: section || {name: "Слайд", time: ""}
+  });
+}
+
+/* ═══════════════ РАЗДЕЛ 1 · ВВЕДЕНИЕ ═══════════════ */
+
+add(
+  "Введение в DevOps",
+  "От написанного кода до работающего сервиса: непрерывная интеграция, доставка и эксплуатация",
+  '<div class="hero"><div>' +
+  '<p class="big">Лекция 80 минут · 8 разделов · практический уклон</p>' +
+  '<div class="tags"><span class="pill">CI</span><span class="pill">CD</span>' +
+  '<span class="pill">Docker</span><span class="pill">Jenkins</span>' +
+  '<span class="pill">Ansible</span><span class="pill">Kubernetes</span></div></div>' +
+  '<div class="hero-symbol">∞</div></div>',
+  "",
+  [["Доклад Декона на конференции Agile 2008", "https://www.youtube.com/watch?v=LdOe18KhtT4"]],
+  60,
+  {name: "Введение", time: "0:00"}
+);
+
+add(
+  "План лекции",
+  "Восемь разделов — от проблемы до полного пайплайна",
+  flow([["Введение", "идея и культура DevOps"],
+    ["CI", "непрерывная интеграция, сборка"],
+    ["Тесты", "пирамида, quality gates"],
+    ["CD", "доставка и развёртывание"],
+    ["Docker", "контейнеры, образы"],
+    ["Jenkins", "серверы автоматизации"],
+    ["Ansible", "конфигурация и IaC"],
+    ["Итоги", "путь вашего приложения"]
+  ]) +
+  callout("Что именно автоматизируем и зачем?"),
+  "",
+  [],
+  70,
+  {name: "Введение", time: "1:00"}
+);
+
+add(
+  "Где мы сейчас",
+  "Вы уже умеете создавать приложение — осталось научиться его эксплуатировать",
+  three(
+    card("Что пройдено", "<ul><li>Основы фронтенда: HTML, CSS, JavaScript</li><li>Основы бэкенда: HTTP, REST, Node.js/Express</li><li>Базы данных: SQL, простые схемы</li><li>Простое веб-приложение, работающее локально</li></ul>", "good"),
+    card("Что происходит сейчас", "<ul><li>Приложение запускается на вашем ноутбуке</li><li>Зависит от вашей ОС и установленных версий</li><li>Данные живут в локальной базе</li><li>Демонстрация = «подойдите посмотреть»</li></ul>", "warn"),
+    card("Что нужно дальше", "<ul><li>Развернуть приложение на сервере</li><li>Обновлять его без простоя и ручной работы</li><li>Повторять развёртывание в любой среде</li><li>Знать, работает ли сервис прямо сейчас</li></ul>", "accent")
+  ) +
+  callout("DevOps отвечает на вопрос: как превратить папку с кодом в надёжно работающий сервис."),
+  "",
+  [],
+  80,
+  {name: "Введение", time: "2:10"}
+);
+
+add(
+  "Проблема: «у меня работает!»",
+  "Классический разрыв между разработкой и эксплуатацией",
+  two(
+    card("Разработчик говорит", "<ul><li>«Всё работает на моей машине»</li><li>«Ты просто неправильно запускаешь»</li><li>«У тебя старая версия Node.js»</li><li>«Настрой переменную окружения — очевидно же»</li></ul>", "bad"),
+    card("Эксплуатация говорит", "<ul><li>«На сервере другая ОС и другие версии»</li><li>«Инструкция устарела, шаг 14 не выполняется»</li><li>«Почему приложение требует права root?»</li><li>«Кто менял конфигурацию в 3 часа ночи?»</li></ul>", "bad")
+  ) +
+  callout("Код один, окружений много, а знание о том, как всё запустить, живёт в головах — и теряется.", "warn"),
+  "",
+  [],
+  90,
+  {name: "Введение", time: "3:30"}
+);
+
+add(
+  "Что такое DevOps",
+  "Подход, объединяющий разработку и эксплуатацию в единый цикл",
+  '<p class="big">DevOps (development + operations) — набор практик, направленных на то, чтобы путь от изменения кода до его появления у пользователя был коротким, автоматизированным и измеримым.</p>' +
+  flow([
+    ["Plan", "планирование"],
+    ["Code", "разработка"],
+    ["Build", "сборка"],
+    ["Test", "тесты"],
+    ["Release", "релиз"],
+    ["Deploy", "развёртывание"],
+    ["Operate", "эксплуатация"],
+    ["Monitor", "мониторинг"]
+  ]),
+  "",
+  [],
+  90,
+  {name: "Введение", time: "5:00"}
+);
+
+add(
+  "История вопроса",
+  "Как индустрия пришла к DevOps",
+  steps([
+    "1990–2000-е: модель Waterfall — месяцы разработки, раз в квартал релиз, релизы — стресс и ночные дежурства.",
+    "2001: Agile-манифест — короткие итерации, но код всё ещё «выбрасывали через стену» эксплуатации.",
+    "2009: конференция Velocity, доклад Джона Олспоу; Патрик Дебуа придумывает термин DevOps и проводит первую DevOpsDays в Генте.",
+    "2010-е: облака и контейнеры делают автоматизацию реальной; DevOps становится индустриальным стандартом.",
+    "Сегодня: DevSecOps, GitOps, platform engineering — развитие тех же идей."
+  ]) +
+  callout("DevOps возник как ответ на боль: редкие релизы были дорогими и рискованными."),
+  "",
+  [],
+  80,
+  {name: "Введение", time: "6:30"}
+);
+
+add(
+  "DevOps — это культура, а не инструменты",
+  "Инструменты без культуры не работают",
+  two(
+    card("Культурные практики", "<ul><li>Общая ответственность за продукт</li><li>Ревью кода и совместная работа</li><li>Отсутствие культа «недосягаемых гуру-админов»</li><li>Культура без обвинений при инцидентах (blameless postmortem)</li></ul>", "good"),
+    card("Инженерные практики", "<ul><li>Автоматизация рутинных операций</li><li>Инфраструктура как код</li><li>Наблюдаемость: метрики, логи, алерты</li><li>Небольшие частые изменения вместо «большого взрыва»</li></ul>", "accent")
+  ) +
+  callout("Купивший Jenkins ещё не DevOps-инженер: автоматизация ручной рутины ускоряет именно ту практику, которая уже есть.", "warn"),
+  "Акцент: инструмент — это средство. Если команда вручную копирует файлы по FTP и настраивает сервер по памяти, Jenkins лишь ускорит копирование. Сначала — культура и инженерная дисциплина, потом — автоматизация.",
+  [],
+  90,
+  {name: "Введение", time: "7:50"}
+);
+
+add(
+  "Чем занимается DevOps-инженер",
+  "Профессия на стыке разработки, системного администрирования и автоматизации",
+  table(
+    ["Направление", "Задачи", "Пример инструментов"],
+    [
+      ["CI/CD", "Пайплайны сборки, тестов, доставки", "Jenkins, GitLab CI, GitHub Actions"],
+      ["Контейнеризация", "Упаковка приложений, образы, реестры", "Docker, containerd"],
+      ["Конфигурация и IaC", "Управление серверами и инфраструктурой как кодом", "Ansible, Terraform"],
+      ["Оркестрация", "Управление большим числом контейнеров", "Kubernetes"],
+      ["Наблюдаемость", "Метрики, логи, тревожные сигналы", "Prometheus, Grafana, Loki"],
+      ["Надёжность", "Инциденты, откаты, резервное копирование", "SRE-практики, runbooks"]
+    ]
+  ) +
+  callout("Спрос: профессия стабильно входит в топ инженерных вакансий; требуется понимание и кода, и инфраструктуры."),
+  "DevOps-инженер пишет код (скрипты, пайплайны, шаблоны), читает чужой код и понимает сети, ОС и протоколы.",
+  [],
+  80,
+  {name: "Введение", time: "9:20"}
+);
+
+add(
+  "Ключевые направления DevOps",
+  "Шесть практик, из которых складывается подход",
+  three(
+    card("CI — непрерывная интеграция", "<p>Ветки сливаются в основную ветку несколько раз в день, каждое слияние проверяется сборкой и тестами автоматически.</p>", "accent"),
+    card("CD — непрерывная доставка", "<p>Приложение всегда находится в состоянии, пригодном для развёртывания; релиз выполняется по кнопке или автоматически.</p>", "accent"),
+    card("IaC — инфраструктура как код", "<p>Серверы и сети описываются декларативно в файлах, а не настраиваются вручную.</p>", "accent")
+  ) +
+  three(
+    card("Мониторинг и логирование", "<p>Система сообщает о себе: метрики, логи, трассировки запросов.</p>", ""),
+    card("Управление конфигурацией", "<p>Единообразная настройка множества машин из одного источника истины.</p>", ""),
+    card("Безопасность (DevSecOps)", "<p>Проверки уязвимостей и секретов встроены в пайплайн, а не добавлены в конце.</p>", "")
+  ),
+  "",
+  [],
+  80,
+  {name: "Введение", time: "10:40"}
+);
+
+add(
+  "Как измеряют зрелость: метрики DORA",
+  "Четыре ключевые метрики доставки ПО",
+  table(
+    ["Метрика", "Что измеряет", "У зрелой команды"],
+    [
+      ["Deployment frequency", "Как часто выкатывают в прод", "Несколько раз в день"],
+      ["Lead time for changes", "Время от коммита до работы у пользователя", "Минуты — часы"],
+      ["Change failure rate", "Доля релизов, вызвавших инцидент", "Менее 15%"],
+      ["Time to restore", "Время восстановления после сбоя", "Меньше часа"]
+    ]
+  ) +
+  callout("Смысл метрик: не «сколько строк кода», а скорость и надёжность поставки ценности пользователю.", "good"),
+  "DORA (State of DevOps, ежегодный отчёт с 2014 года). Важно: цель DevOps — одновременно высокая скорость и высокая стабильность, а не компромисс между ними. Хорошая аналогия: частые мелкие релизы — как маленькие шаги против прыжка через пропасть.",
+  [["DORA: State of DevOps", "https://dora.dev/"]],
+  70,
+  {name: "Введение", time: "12:00"}
+);
+
+/* ═══════════════ РАЗДЕЛ 2 · CI — НЕПРЕРЫВНАЯ ИНТЕГРАЦИЯ ═══════════════ */
+
+add(
+  "CI: непрерывная интеграция",
+  "Определение и базовые правила",
+  '<p class="big">Непрерывная интеграция — практика, при которой изменения кода от всех разработчиков регулярно сливаются в общую ветку, и каждое слияние автоматически проверяется сборкой и тестами.</p>' +
+  checks([
+    "Все работают с одним репозиторием, никаких «у меня локальная ветка месяц»",
+    "Каждое изменение — небольшое (идеально: меньше одного рабочего дня)",
+    "Сборка и тесты запускаются автоматически при каждом push и merge request",
+    "Сломанная сборка чинится в приоритетном порядке — до новых изменений"
+  ]),
+  "",
+  [],
+  80,
+  {name: "CI — непрерывная интеграция", time: "13:10"}
+);
+
+add(
+  "Зачем: интеграционный ад",
+  "Что происходит, когда слияния откладываются",
+  two(
+    card("При редких слияниях", "<ul><li>Конфликты веток растут экспоненциально</li><li>Баг находят спустя недели — непонятно, чьё изменение его привнесло</li><li>Релиз откладывается, потому что «ещё не всё слито»</li><li>Работающая версия есть только у одного разработчика</li></ul>", "bad"),
+    card("При непрерывной интеграции", "<ul><li>Конфликты маленькие и редкие</li><li>Баг локализован одним коммитом — легко искать и откатывать</li><li>Основная ветка всегда в рабочем состоянии</li><li>Любой может в любой момент собрать релиз из main</li></ul>", "good")
+  ) +
+  callout("Аналогия с физикой: слияние маленьких изменений — диффузия, больших — лобовое столкновение."),
+  "Cистемы контроля версий (Git) сами по себе не решают проблему — они лишь дают механизм. Дисциплина мелких слияний — это и есть CI.",
+  [],
+  80,
+  {name: "CI — непрерывная интеграция", time: "14:30"}
+);
+
+add(
+  "Из чего состоит CI-система",
+  "Четыре компонента, которые работают вместе",
+  three(
+    card("1 · Репозиторий", "<p>Git-хранилище кода и конфигурации пайплайна. События (push, merge request) — триггеры для запуска.</p>", "accent"),
+    card("2 · Сборка", "<p>Система сборки превращает исходники в артефакт: bundle фронтенда, jar/wheel-пакет, образ Docker.</p>", ""),
+    card("3 · Проверки", "<p>Линтеры, статический анализ, автоматические тесты — «quality gates» на пути изменения.</p>", "")
+  ) +
+  three(
+    card("4 · Сервер CI", "<p>Агенты, выполняющие шаги пайплайна в чистых окружениях: Jenkins, GitLab Runner, GitHub Actions.</p>", ""),
+    card("5 · Обратная связь", "<p>Результат каждого прогона виден всем: статус в merge request, уведомления в мессенджер.</p>", ""),
+    card("6 · Артефакты", "<p>Проверенные результаты сборки сохраняются для дальнейших этапов (CD).</p>", "accent")
+  ),
+  "CI — это не «Jenkins», а цепочка репозиторий → сборка → проверки → артефакт. Jenkins или GitLab CI — лишь оркестратор, который запускает эту цепочку. Это важно, чтобы дальше не путать инструмент и практику.",
+  [],
+  80,
+  {name: "CI — непрерывная интеграция", time: "15:50"}
+);
+
+add(
+  "Git как фундамент",
+  "Ветвление, которое поддерживает интеграцию",
+  two(
+    card("Модель: trunk-based development", "<ul><li>Одна основная ветка — <code>main</code></li><li>Фичи — короткоживущие ветки (часы, не недели)</li><li>Merge request проходит проверки CI до слияния</li><li>Ревью — обязательный quality gate</li></ul>", "good"),
+    card("Противопоставление", "<ul><li>Долгоживущие ветки <code>feature-x</code> на месяцы</li><li>Ветки релизов, в которые переносят правки</li><li>Слияние превращается в проект со своими рисками</li><li>CI невозможен: нечего интегрировать непрерывно</li></ul>", "bad")
+  ) +
+  callout("Правило простое: ветка живёт недолго, а проверки проходят до слияния, а не после."),
+  "",
+  [],
+  80,
+  {name: "CI — непрерывная интеграция", time: "17:10"}
+);
+
+add(
+  "Система сборки: что это",
+  "Инструмент, превращающий исходный код в запускаемый артефакт",
+  '<p class="big">Система сборки (build system) — программа, которая по декларативному описанию (файлу-манифесту) воспроизводимо превращает исходники в артефакт: установку, пакет, бандл, образ.</p>' +
+  three(
+    card("Что описывает манифест", "<ul><li>Зависимости и их версии</li><li>Шаги: компиляция, транспиляция, бандлинг</li><li>Задачи: test, build, lint, start</li></ul>", ""),
+    card("Почему «система», а не «скрипт»", "<ul><li>Воспроизводимость: любой запуск даёт тот же результат</li><li>Инкрементальность: пересборка только изменённого</li><li>Стандартизация: команды знакомы всем</li></ul>", ""),
+    card("Примеры манифестов", "<ul><li><code>package.json</code> — npm</li><li><code>pom.xml</code> — Maven</li><li><code>build.gradle</code> — Gradle</li><li><code>Makefile</code> — make</li></ul>", "accent")
+  ),
+  "Cистема сборки устраняет человеческий фактор — «я собирал вручную и что-то забыл». Манифест — единый источник истины о том, как собирается проект.",
+  [],
+  90,
+  {name: "CI — непрерывная интеграция", time: "18:30"}
+);
+
+add(
+  "Примеры систем сборки",
+  "От универсальных к специализированным",
+  table(
+    ["Система", "Стек", "Роль в привычном вам проекте"],
+    [
+      ["make / Makefile", "Любой", "Запуск команд: <code>make build</code>, <code>make test</code> — единый вход"],
+      ["npm scripts", "Node.js", "<code>npm install</code>, <code>npm run build</code> — вы уже этим пользовались"],
+      ["Webpack / Vite", "Фронтенд", "Бандлинг JS/CSS, минификация, хэши файлов"],
+      ["Maven", "Java", "Жизненный цикл: compile → test → package"],
+      ["Gradle", "Java/Kotlin/Android", "То же, что Maven, с программируемой логикой"],
+      ["Docker build", "Любой", "Сборка не программы, а целого окружения исполнения"]
+    ]
+  ) +
+  callout("Студенты уже неосознанно пользовались системой сборки: npm install и npm run build — это она и есть.", "good"),
+  "Cборка не обязательно про компилятор: для JS это установка зависимостей и бандлинг. Docker build продолжит тему в разделе про контейнеры.",
+  [],
+  90,
+  {name: "CI — непрерывная интеграция", time: "20:00"}
+);
+
+add(
+  "Сборка фронтенда: пример",
+  "Что реально происходит при npm run build",
+  code("bash · локальная сборка",
+"npm ci            # чистая установка зависимостей по package-lock.json\n" +
+"npm run lint      # проверка стиля кода (ESLint)\n" +
+"npm run test      # unit-тесты (Vitest / Jest)\n" +
+"npm run build     # vite build → папка dist/ с бандлом", "small") +
+  two(
+    card("Результат — артефакт", "<p>Папка <code>dist/</code>: минифицированные JS/CSS, index.html, картинки с хэшами (<code>app.a3f1b2.js</code>). Её достаточно, чтобы отдавать через любой веб-сервер.</p>", "accent"),
+    card("Почему это идёт первым в CI", "<p>Если сборка падает — нет смысла запускать тяжёлые проверки. Порядок: дёшево сначала (lint → unit), дорого потом (e2e, развёртывание на тестовый стенд).</p>", "")
+  ),
+  "Package-lock.json — важен для воспроизводимости: без него npm ci ставит другие версии. Хэши в именах файлов: позволяют агрессивно кэшировать в CDN и браузере.",
+  [],
+  80,
+  {name: "CI — непрерывная интеграция", time: "21:30"}
+);
+
+add(
+  "Сборка бэкенда: пример",
+  "Node.js и Java в одном пайплайне",
+  two(
+    card("Node.js / Express", code("bash", "npm ci\nnpm test\nnpm prune --omit=dev\n# запуск: node server.js", "small")),
+    card("Java / Spring (для сравнения)", code("bash", "./mvnw verify\n# собирает, тестирует, пакует в jar:\n# target/app-1.0.jar\njava -jar target/app-1.0.jar", "small"))
+  ) +
+  callout("Общий паттерн одинаков: установить зависимости → проверить → собрать артефакт → сохранить артефакт.", "good"),
+  "",
+  [],
+  70,
+  {name: "CI — непрерывная интеграция", time: "22:50"}
+);
+
+add(
+  "Quality gates",
+  "Ворота качества на пути изменения",
+  flow([
+    ["Линтер", "стиль кода, очевидные ошибки"],
+    ["Статический анализ", "неиспользуемый код, уязвимости"],
+    ["Unit-тесты", "логика модулей, мгновенные"],
+    ["Сборка", "проект собирается целиком"],
+    ["Интеграционные тесты", "модули вместе, БД, HTTP"],
+    ["Ревью", "человек читает изменение"]
+  ]) +
+  callout("Сломанные ворота = сломанная main. Команда чинит сборку раньше, чем пишет новый код.", "warn"),
+  "",
+  [],
+  90,
+  {name: "CI — непрерывная интеграция", time: "24:00"}
+);
+
+add(
+  "Анатомия CI-пайплайна",
+  "Один прогон — одна версия изменения",
+  flow([
+    ["Триггер", "push / merge request"],
+    ["Checkout", "клон репозитория"],
+    ["Setup", "установка toolchain (node, jdk)"],
+    ["Install", "зависимости по lock-файлу"],
+    ["Lint + Test", "быстрые проверки"],
+    ["Build", "артефакт"],
+    ["Publish", "сохранить артефакт"]
+  ]) +
+  code("yaml · псевдо-описание пайплайна",
+"stages: [setup, verify, build, publish]\n" +
+"pipeline:\n" +
+"  setup:    install toolchain, npm ci\n" +
+"  verify:   lint, unit-tests, build\n" +
+"  build:    package artifact (dist/, jar, docker image)\n" +
+"  publish:  upload artifact to registry", "small") +
+  callout("Каждый прогон выполняется в чистом окружении: устраняет «у меня работало» на уровне CI-сервера.", "good"),
+  "Ключевой момент: чистое окружение на каждый запуск — это контейнер или свежая виртуальная машина агента. Именно здесь появляется гарантия: если пайплайн зелёный, сборка воспроизводима на любой машине.",
+  [],
+  80,
+  {name: "CI — непрерывная интеграция", time: "25:30"}
+);
+
+add(
+  "Локальные предохранители",
+  "Git hooks и pre-commit проверки",
+  two(
+    card("Pre-commit hook", code("bash · .git/hooks/pre-commit",
+"#!/bin/sh\n" +
+"npx lint-staged\n" +
+"# запускает линтер и форматтер\n" +
+"# только на изменённых файлах", "small") +
+      "<p>Ловит грубые ошибки до коммита: не дожидаясь CI.</p>"),
+    card("Хаски-чек: почему не замена CI", "<ul><li>Хук легко обойти: <code>git commit --no-verify</code></li><li>На машине разработчика окружение «загрязнено»</li><li>Каждый настраивает хуки сам, CI — одинаков для всех</li></ul>", "warn")
+  ) +
+  callout("Правило: локальные проверки — для скорости, серверные — для гарантии. Всегда нужен серверный прогон.", "accent"),
+  "",
+  [],
+  70,
+  {name: "CI — непрерывная интеграция", time: "27:00"}
+);
+
+add(
+  "CI в действии: студенческое приложение",
+  "Сквозной пример лекции: фронтенд + бэкенд + БД",
+  flow([
+    ["Разработчик", "ветка + коммиты"],
+    ["Merge request", "CI запускается"],
+    ["Frontend job", "npm ci → lint → test → vite build"],
+    ["Backend job", "npm ci → тесты → сборка, параллельно с фронтом"],
+    ["Артефакты", "dist/ + образ приложения"],
+    ["Слияние", "только после зелёного пайплайна"]
+  ]) +
+  callout("Фронтенд и бэкенд проверяются параллельными «job» — общее время ожидания меньше, чем последовательный прогон.", "accent"),
+  "",
+  [],
+  90,
+  {name: "CI — непрерывная интеграция", time: "28:10"}
+);
+
+add(
+  "Выводы раздела: CI",
+  "Что нужно запомнить о непрерывной интеграции",
+  checks([
+    "CI — дисциплина мелких слияний в общую ветку, а не «сервер, который запускает тесты»",
+    "Система сборки по манифесту даёт воспроизводимый артефакт",
+    "Quality gates: lint → unit → build → интеграционные → ревью, дешёвое раньше дорогого",
+    "Пайплайн — код в репозитории; чистое окружение на каждый прогон",
+    "Зелёный пайплайн = разрешение на слияние; красный чинится в приоритетном порядке"
+  ]) +
+  callout("Метрика раздела: lead time на этапе интеграции — минуты, а не дни.", "good"),
+  "",
+  [],
+  70,
+  {name: "CI — непрерывная интеграция", time: "29:40"}
+);
+
+/* ═══════════════ РАЗДЕЛ 3 · ТЕСТИРОВАНИЕ В ПАЙПЛАЙНЕ ═══════════════ */
+
+add(
+  "Пирамида тестирования",
+  "Сколько тестов какого типа должно быть",
+  '<div class="pyramid">' +
+  '<div class="e2e">E2E-тесты<small>мало, медленные, дорогие: «пользователь открывает сайт и оформляет заказ»</small></div>' +
+  '<div class="integration">Интеграционные<small>средний слой: API + база данных, сервисы вместе</small></div>' +
+  '<div class="unit">Unit-тесты<small>много, быстрые, дешёвые: функции и классы по отдельности</small></div>' +
+  '</div>' +
+  callout("Чем ниже уровень — тем дешевле тест, тем быстрее он падает и тем точнее указывает на причину.", "accent"),
+  "Пирамида — классика Майка Кона (Succeeding with Agile, 2009). Опорный принцип: тяжёлые e2e-тесты никогда не заменят массив фундамента unit-тестов. Аналогия: испытания детали на станке vs испытания всего автомобиля на полигоне.",
+  [],
+  90,
+  {name: "Тестирование в пайплайне", time: "31:10"}
+);
+
+add(
+  "Три уровня на примере веб-приложения",
+  "Конкретные тесты для знакомого стека",
+  three(
+    card("Unit", "<p>Проверяет одну функцию: парсер даты, валидацию email, расчёт цены корзины. Без сети и базы, за миллисекунды.</p><p><code>expect(calcTotal(items)).toBe(1450)</code></p>", "good"),
+    card("Интеграционный", "<p>Проверяет связку: маршрут Express + реальный запрос к тестовой БД. «POST /api/orders возвращает 201 и запись появляется в таблице».</p>", "accent"),
+    card("E2E", "<p>Проверяет продукт как пользователь: браузер открывает страницу, вводит логин, оформляет заказ. Инструменты: Playwright, Cypress.</p>", "warn")
+  ) +
+  callout("Студенческий проект: unit на чистые функции, 2–3 интеграционных на API, один «счастливый путь» e2e.", "good"),
+  "",
+  [],
+  90,
+  {name: "Тестирование в пайплайне", time: "32:40"}
+);
+
+add(
+  "Что автоматизировать в CI",
+  "Практические правила отбора",
+  two(
+    card("Автоматизируем", "<ul><li>Всё, что проверяет бизнес-логику (unit)</li><li>Контракты API: запрос → ответ</li><li>Критические пользовательские сценарии (e2e-дымовые)</li><li>Регрессию: старые баги покрыты тестами</li></ul>", "good"),
+    card("Осторожнее с", "<ul><li>Вёрстка пиксель-в-пиксель — хрупко</li><li>Тесты, зависящие от текущей даты/внешних API</li><li>Слишком длинные e2e-сценарии «на всё»</li><li>Дублирование: один сценарий — один тест</li></ul>", "warn")
+  ) +
+  callout("Правило: тест, который никогда не падает, ничего не стоит.", "accent"),
+  "Важна договорённость в команде: сначала пишется тест на баг (regression-first), потом фикс — иначе баг возвращается. Покрытие кода — ориентир, а не цель; 100% покрытие с пустыми тестами бесполезно.",
+  [],
+  70,
+  {name: "Тестирование в пайплайне", time: "34:10"}
+);
+
+add(
+  "Хрупкие тесты и стабильность пайплайна",
+  "Flaky test — главный враг доверия к CI",
+  two(
+    card("Почему тесты «мигают»", "<ul><li>Гонки: ожидание фиксированного таймаута вместо условия</li><li>Зависимость от внешних сервисов и времени</li><li>Тесты влияют друг на друга через общее состояние</li></ul>", "bad"),
+    card("Что делать", "<ul><li>Повторяющуюся нестабильность чинить в приоритете</li><li>Изолировать тесты: своя БД, свои данные</li><li>Метрика: пайплайн зелёный подряд N прогонов</li></ul>", "good")
+  ) +
+  callout("Красный «мигающий» пайплайн приучает команду игнорировать красный цвет — и настоящие баги пропускаются.", "bad"),
+  "Пример гонки: клик по кнопке через setTimeout(500) вместо ожидания появления элемента — на медленном агенте тест падает. Вывод: доверие к CI дороже скорости; «перезапусти, пройдёт» — табу.",
+  [],
+  70,
+  {name: "Тестирование в пайплайне", time: "35:20"}
+);
+
+/* ═══════════════ РАЗДЕЛ 4 · CD — НЕПРЕРЫВНАЯ ДОСТАВКА ═══════════════ */
+
+add(
+  "CD: непрерывная доставка и развёртывание",
+  "Два смысла одной аббревиатуры — важно различать",
+  two(
+    card("Continuous Delivery — доставка", "<ul><li>Код после CI всегда готов к релизу</li><li>Развёртывание в прод — осознанное решение человека («кнопка»)</li><li>Типично для продуктов с релизным циклом, регуляцией</li></ul>", "accent"),
+    card("Continuous Deployment — развёртывание", "<ul><li>Релиз происходит автоматически после зелёного пайплайна</li><li>Нет «дня релиза»: изменения у пользователей через минуты после merge</li><li>Требует высочайшей культуры тестов и мониторинга</li></ul>", "good")
+  ) +
+  callout("Общая база одна: каждое изменение, прошедшее CI, доводится до окружений одинаковым, автоматизированным способом.", ""),
+  "Это самая частая путаница в терминологии. GitHub использует deployment (автоматически после зелёных тестов), многие банки — delivery (ручное подтверждение релиза аудитором). Оба варианта лучше ручного развёртывания по инструкции.",
+  [],
+  90,
+  {name: "CD — непрерывная доставка", time: "36:30"}
+);
+
+add(
+  "Окружения: продвижение артефакта",
+  "Один артефакт — один путь вверх по лестнице",
+  flow([
+    ["CI", "сборка + тесты артефакта"],
+    ["Dev", "разработчики смотрят на живом стенде"],
+    ["Staging", "как прод, но без пользователей"],
+    ["Production", "реальные пользователи"]
+  ]) +
+  two(
+    card("Принцип «promote the same artifact»", "<p>На все окружения выкатывается <b>один и тот же</b> артефакт, прошедший CI. Различие окружений — только конфигурация: URL базы, ключи, фичи.</p>", "accent"),
+    card("Антипаттерн: пересборка под прода", "<p>Собрали «под прод» заново — получили другой бинарник: другие версии зависимостей, другое поведение. Баг «не воспроизводится на стейдже» гарантирован.</p>", "bad")
+  ),
+  "",
+  [["The Twelve-Factor App", "https://12factor.net/"]],
+  80,
+  {name: "CD — непрерывная доставка", time: "38:00"}
+);
+
+add(
+  "Артефакт и его версии",
+  "Что именно движется по пайплайну",
+  table(
+    ["Тип артефакта", "Технология", "Версионирование"],
+    [
+      ["Бандл фронтенда", "dist/ из vite build", "Номер сборки в имени файла + git SHA"],
+      ["Пакет бэкенда", "jar, wheel, tar с сервером", "Семантическая версия 1.4.2"],
+      ["Docker-образ", "image из Dockerfile", "Тег: версия, git SHA, latest"],
+      ["Helm-чарт / манифесты", "Описание развёртывания", "Версия чарта в репозитории"]
+    ]
+  ) +
+  callout("Иммутабельность: опубликованный артефакт не изменяется. Новая версия — новый артефакт, откат — возврат к старому.", "accent"),
+  "Если можно перезаписать образ под тем же тегом, теряется воспроизводимость. Хорошая практика: тегировать образ git SHA коммита — всегда понятно, какой код внутри.",
+  [],
+  80,
+  {name: "CD — непрерывная доставка", time: "39:20"}
+);
+
+add(
+  "Контейнер как формат артефакта",
+  "Почему образ Docker стал стандартной «единицы доставки»",
+  '<p class="big">Контейнерный образ упаковывает приложение вместе со всеми зависимостями и окружением исполнения. Один раз собранный образ запускается одинаково на ноутбуке разработчика, CI-сервере и продакшен-машине.</p>' +
+  callout("Это непосредственное решение проблемы «у меня работает» — среда исполнения становится частью артефакта.", "good"),
+  "Мостик к следующему разделу. Формулировка «build once, run anywhere» — вспомнить Java, но здесь она наконец работает не только для языка, а для всего окружения: ОС, библиотеки, переменные. Детали — дальше.",
+  [],
+  70,
+  {name: "CD — непрерывная доставка", time: "40:30"}
+);
+
+add(
+  "Стратегии развёртывания",
+  "Как обновлять прод, не останавливая сервис",
+  three(
+    card("Rolling update", "<p>Серверы обновляются по одному: старая версия выводится из балансировки, обновляется, возвращается. Пользователи не замечают.</p><small>Просто, но некоторое время работают две версии одновременно</small>", ""),
+    card("Blue-green", "<p>Два идентичных окружения: «зелёное» развёртывается и тестируется, затем балансировщик мгновенно переключает трафик. Откат — тот же переключатель.</p><small>Нужна двойная инфраструктура; база данных общая — осторожно со схемой</small>", "accent"),
+    card("Canary (канареечная)", "<p>Новая версия получает 1–5% трафика. Мониторинг сравнивает ошибки и метрики. Постепенно доля растёт до 100%.</p><small>Как канарейка в шахте — ранняя сигнализация о проблеме</small>", "good")
+  ) +
+  callout("Netflix и Google катят тысячи релизов в день именно канареечно — с автоматическим откатом по метрикам."),
+  "Blue-green: классика для релизов с переключением за секунды. Canary: ссылка на шахтёрскую канарейку — метафора из XIX века, смысл тот же: малая доля «дышит» новой версией первой. Для студенческого проекта достаточно rolling.",
+  [],
+  100,
+  {name: "CD — непрерывная доставка", time: "41:40"}
+);
+
+add(
+  "Feature flags",
+  "Развёртывание без включения функциональности",
+  two(
+    card("Идея", "<p>Код новой функции выкатывается выключенным и включается конфигурацией или кнопкой в админке — без нового развёртывания.</p>" +
+    code("js · пример", "if (flags.isEnabled('new-checkout')) {\n  return renderNewCheckout();\n}\nreturn renderOldCheckout();", "small"), "accent"),
+    card("Что даёт", "<ul><li>Разрыв «релиз кода» и «релиз фичи»</li><li>Быстрое выключение проблемной фичи за секунды</li><li>A/B-тестирование: разным группам — разное поведение</li><li>Тёмные запуски: проверить интеграцию до включения</li></ul>", "good")
+  ) +
+  callout("Требование к архитектуре: флаги должны легко удаляться, иначе код превращается в рождественскую ёлку."),
+  "Пример из жизни: Facebook запускает новый интерфейс флагом для сотрудников, потом для 1% пользователей. У студентов флаг может быть простым переменной окружения FEATURE_NEW_UI=true. Флаки без уборки = технический долг.",
+  [],
+  70,
+  {name: "CD — непрерывная доставка", time: "43:20"}
+);
+
+add(
+  "Мониторинг и быстрый откат",
+  "Развёртывание не заканчивается на деплое",
+  flow([
+    ["Deploy", "новая версия у части трафика"],
+    ["Observe", "метрики: ошибки, latency, бизнес-показатели"],
+    ["Decide", "всё в норме → наращиваем долю"],
+    ["Rollback", "аномалия → возврат к прошлой версии"]
+  ]) +
+  two(
+    card("Сигналы, за которыми следят", "<ul><li>HTTP 5xx и доля ошибок</li><li>Время ответа (p95, p99)</li><li>Нагрузка CPU/память</li><li>Бизнес-метрика: заказы, регистрации</li></ul>", ""),
+    card("Откат — обычная операция", "<ul><li>Не авария, а штатный шаг пайплайна</li><li>Иммутабельные артефакты делают его дешёвым</li><li>Базы данных: миграции только «расширяющие»</li></ul>", "accent")
+  ),
+  "Настоящий CD невозможен без наблюдаемости. Про p95: среднее время ответа скрывает страдания 5% пользователей. Про миграции БД: сначала код, умеющий работать со старой и новой схемой, потом миграция — иначе откат ломает данные.",
+  [],
+  80,
+  {name: "CD — непрерывная доставка", time: "44:30"}
+);
+
+add(
+  "Полный пайплайн CI/CD",
+  "Собираем всю цепочку на одной схеме",
+  flow([
+    ["Commit", "ветка, push"],
+    ["CI", "lint → unit → build"],
+    ["Artifact", "образ Docker + тег SHA"],
+    ["CD: staging", "автодеплой на стейдж"],
+    ["E2E + smoke", "проверки на живом стенде"],
+    ["CD: prod", "канарея/rolling, мониторинг"],
+    ["Operate", "метрики, логи, алерты"]
+  ]) +
+  callout("От коммита до пользователя — минуты, без единого ручного шага. Это и есть цель.", "good"),
+  "",
+  [],
+  90,
+  {name: "CD — непрерывная доставка", time: "45:50"}
+);
+
+/* ═══════════════ РАЗДЕЛ 5 · DOCKER И КОНТЕЙНЕРЫ ═══════════════ */
+
+add(
+  "Проблема окружений, которую решает Docker",
+  "«На моей машине работает» — формально",
+  two(
+    card("Типичная цепочка несовпадений", "<ul><li>Разработка: macOS, Node 20, .env на памяти</li><li>CI-сервер: Ubuntu, Node 18, половина пакетов старше</li><li>Стейджинг: Debian, ручная установка nginx</li><li>Прод: другой дистрибутив, конфиг правился вручную в 2024 году</li></ul>", "bad"),
+    card("Последствия", "<ul><li>Тесты зелёные, а на проде ошибка libssl</li><li>Инструкция по развёртыванию — 40 шагов, шаг 27 устарел</li><li>Восстановить сервер после сбоя невозможно за разумное время</li></ul>", "warn")
+  ) +
+  callout("Корень зла: приложение зависит от окружения, а окружение не является частью артефакта.", ""),
+  "",
+  [],
+  80,
+  {name: "Docker и контейнеры", time: "47:20"}
+);
+
+add(
+  "Виртуальная машина и контейнер",
+  "Два способа изоляции — разная цена",
+  two(
+    card("Виртуальная машина", "<ul><li>Эмулирует железо: своё ядро ОС, свой init</li><li>Гипервизор: VirtualBox, KVM, ESXi</li><li>Запуск: минуты, образ: гигабайты</li><li>Изоляция: сильная, независимая от хоста</li></ul>", ""),
+    card("Контейнер", "<ul><li>Разделяет ядро хостовой ОС, изолирует процессы</li><li>Ядра Linux: namespaces + cgroups</li><li>Запуск: миллисекунды, образ: мегабайты</li><li>Изоляция: достаточная для приложений</li></ul>", "accent")
+  ) +
+  callout("VM — «квартира с отдельным котлом», контейнер — «комната в общежитии»: свой порядок, общие коммуникации.", "accent"),
+  "Сравнение по памяти: VM тяжёлая, потому что гостевая ОС целиком, включая ядро. Контейнер — изоляция на уровне процессов ОС-хоста. На одном сервере можно запустить десятки VM или сотни контейнеров. Но изоляция слабее — соседний контейнер-преступник теоретически опаснее, чем чужая VM.",
+  [],
+  90,
+  {name: "Docker и контейнеры", time: "48:40"}
+);
+
+add(
+  "Что такое контейнер технически",
+  "Namespaces + cgroups + слоёвая файловая система",
+  table(
+    ["Механизм ядра Linux", "Что даёт контейнеру"],
+    [
+      ["Namespaces (pid, net, mount, user)", "Свой «взгляд» на систему: свои процессы, свой сетевой стек, своя файловая система"],
+      ["Control groups (cgroups)", "Лимиты на CPU, память, диск и сеть — контейнер не может «съесть» соседей"],
+      ["Union filesystem (overlay2)", "Слоёвая файловая система образа: слои переиспользуются между образами"],
+      ["Capabilities + seccomp", "Ограничение привилегий процесса: контейнер не является root для хоста"]
+    ]
+  ) +
+  callout("Docker — не виртуализация и не эмуляция: это изоляция обычных процессов средствами ядра Linux.", "accent"),
+  "",
+  [],
+  90,
+  {name: "Docker и контейнеры", time: "50:10"}
+);
+
+add(
+  "Образ и контейнер",
+  "Класс и объект, формула и подстановка",
+  two(
+    card("Образ (image)", "<ul><li>Неизменяемый шаблон: ОС-основа + зависимости + код</li><li>Состоит из слоёв, каждый — результат инструкции Dockerfile</li><li>Хранится в реестре: Docker Hub, GitLab Registry</li></ul>", "accent"),
+    card("Контейнер (container)", "<ul><li>Запущенный процесс, созданный из образа</li><li>Может иметь своё состояние (тома), но сам образ не меняется</li><li>Один образ → много контейнеров</li></ul>", "good")
+  ) +
+  code("bash · базовые команды",
+"docker pull node:20-alpine     # скачать образ из реестра\n" +
+"docker build -t myapp:1.0 .    # собрать образ из Dockerfile\n" +
+"docker run -d -p 3000:3000 myapp:1.0   # запустить контейнер\n" +
+"docker ps                      # список работающих контейнеров\n" +
+"docker logs <id>               # логи контейнера", "small") +
+  callout("ООП-аналогия: образ — класс, контейнер — экземпляр.", "accent"),
+  "",
+  [],
+  80,
+  {name: "Docker и контейнеры", time: "51:40"}
+);
+
+add(
+  "Dockerfile: рецепт образа",
+  "Декларативное описание окружения вместо инструкций для человека",
+  two(
+    card("Пример для Node.js-приложения", code("dockerfile", "FROM node:20-alpine\n\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --omit=dev\n\nCOPY . .\nEXPOSE 3000\n\nCMD [\"node\", \"server.js\"]", "small"), "accent"),
+    card("Что делает каждая инструкция", "<ul><li><code>FROM</code> — базовый образ с нужной версией Node</li><li><code>COPY</code> + <code>RUN</code> — зависимости ставятся до кода</li><li><code>WORKDIR</code> — рабочая директория</li><li><code>EXPOSE</code> — документация порта</li><li><code>CMD</code> — команда запуска контейнера</li></ul>", "")
+  ) +
+  callout("Каждая инструкция = слой образа. Порядок строк — вопрос кэширования и скорости сборки.", "warn"),
+  "",
+  [],
+  100,
+  {name: "Docker и контейнеры", time: "53:00"}
+);
+
+add(
+  "Слои и кэширование",
+  "Почему порядок инструкций имеет значение",
+  flow([
+    ["Слой 1", "FROM node:20-alpine — базовый образ"],
+    ["Слой 2", "COPY package*.json + RUN npm ci"],
+    ["Слой 3", "COPY . . — код приложения"],
+    ["Слой 4", "CMD — метаданные запуска"]
+  ]) +
+  two(
+    card("Меняем код приложения", "<p>Пересобирается только слой 3. Слой 2 берётся из кэша: зависимости не качаются заново. Сборка — секунды.</p>", "good"),
+    card("Меняем зависимости", "<p>Инвалидируются слои 2–4: npm ci выполняется заново. Поэтому часто меняющееся (код) кладём в конец.</p>", "accent")
+  ) +
+  callout("Правило: от редко меняющегося к часто меняющемуся сверху вниз.", "good"),
+  "",
+  [],
+  80,
+  {name: "Docker и контейнеры", time: "54:40"}
+);
+
+add(
+  "Сборка и запуск",
+  "Полный цикл руками — то, что делает CI за вас",
+  code("bash · ручной цикл",
+"# 1. Собрать образ с тегом\n" +
+"docker build -t student-app:0.1.0 .\n\n" +
+"# 2. Запустить контейнер с пробросом порта\n" +
+"docker run -d --name app -p 8080:3000 student-app:0.1.0\n\n" +
+"# 3. Проверить\n" +
+"curl http://localhost:8080\n" +
+"docker logs app\n\n" +
+"# 4. Остановить и удалить\n" +
+"docker stop app && docker rm app", "small") +
+  callout("Теперь команду «как развернуть приложение» можно заменить одной: docker run. Инструкция из 40 шагов умерла.", "good"),
+  "",
+  [],
+  80,
+  {name: "Docker и контейнеры", time: "56:00"}
+);
+
+add(
+  "Docker Compose: многосервисное приложение",
+  "Фронтенд + бэкенд + база данных одной командой",
+  code("yaml · docker-compose.yml",
+"services:\n" +
+"  frontend:\n" +
+"    build: ./frontend\n" +
+"    ports: [\"5173:5173\"]\n" +
+"  backend:\n" +
+"    build: ./backend\n" +
+"    ports: [\"3000:3000\"]\n" +
+"    environment:\n" +
+"      DB_URL: postgres://db:5432/app\n" +
+"    depends_on: [db]\n" +
+"  db:\n" +
+"    image: postgres:16-alpine\n" +
+"    volumes: [dbdata:/var/lib/postgresql/data]\n\n" +
+"volumes: { dbdata: {} }", "small") +
+  callout("docker compose up — поднимает всю систему: одна команда вместо трёх терминалов с ручным порядком запуска.", "accent"),
+  "",
+  [],
+  100,
+  {name: "Docker и контейнеры", time: "57:20"}
+);
+
+add(
+  "Тома и сети",
+  "Данные и коммуникация в контейнерной модели",
+  two(
+    card("Тома (volumes)", "<ul><li>Контейнер эфемерен: удалил — данные исчезли</li><li>Том — директория вне слоёв контейнера</li><li>База данных обязана писать в том, иначе restart = потеря</li><li>Типы: named volume, bind mount (папка хоста)</li></ul>", "accent"),
+    card("Сети", "<ul><li>Каждый compose-проект — своя изолированная сеть</li><li>Контейнеры общаются по имени сервиса</li><li>Наружу видны только опубликованные порты</li><li>Минимум открытых портов = меньше атак</li></ul>", "")
+  ),
+  "",
+  [],
+  70,
+  {name: "Docker и контейнеры", time: "59:00"}
+);
+
+add(
+  "Реестры образов",
+  "Где живут артефакты между CI и серверами",
+  flow([
+    ["docker build", "собрали образ локально или в CI"],
+    ["docker tag", "student-app:0.1.0 → registry.example.com/app:0.1.0"],
+    ["docker push", "отправили в реестр"],
+    ["docker pull", "сервер скачал образ"],
+    ["docker run", "запустил ту же бит-в-бит копию"]
+  ]) +
+  table(
+    ["Реестр", "Кто использует"],
+    [
+      ["Docker Hub", "публичные образы: postgres, nginx, node"],
+      ["GitLab Container Registry", "образы рядом с кодом в GitLab CI"],
+      ["GitHub Container Registry (ghcr.io)", "образы в экосистеме GitHub Actions"],
+      ["Приватные (Harbor, Nexus, ECR)", "компании с требованиями безопасности"]
+    ]
+  ) +
+  callout("Публичные базовые образы — Docker Hub; свои приложения — в приватный реестр, привязанный к вашей CI.", ""),
+  "На прод-сервере никто ничего не собирает: только pull готового образа. Это завершает цепочку «собрать один раз — запускать везде».",
+  [],
+  70,
+  {name: "Docker и контейнеры", time: "60:10"}
+);
+
+add(
+  "Выводы раздела: Docker",
+  "Что нужно запомнить о контейнерах",
+  checks([
+    "Контейнер изолирует процессы средствами ядра Linux: namespaces + cgroups, а не виртуализирует железо",
+    "Образ — неизменяемый шаблон из слоёв; контейнер — его запущенный экземпляр",
+    "Dockerfile — декларативный рецепт окружения; порядок инструкций определяет кэширование",
+    "Compose поднимает многосервисные системы одной командой; БД — только с томами",
+    "Образы версионируются тегами и ходят между CI и серверами через реестр"
+  ]) +
+  callout("Docker решает задачу «одинаково везде»; дальше — как автоматизировать сам процесс сборки и доставки.", "good"),
+  "",
+  [],
+  80,
+  {name: "Docker и контейнеры", time: "61:20"}
+);
+
+/* ═══════════════ РАЗДЕЛ 6 · JENKINS И СЕРВЕРЫ АВТОМАТИЗАЦИИ ═══════════════ */
+
+add(
+  "Jenkins: что это и откуда",
+  "Старейший и всё ещё самый распространённый сервер автоматизации",
+  '<p class="big">Jenkins — open-source сервер автоматизации, который по событиям (push в git, расписание, кнопка) запускает заданные конвейеры: сборку, тесты, развёртывание.</p>' +
+  three(
+    card("История", "<p>2004 — Hudson в Sun Microsystems; 2011 — развилка и переименование в Jenkins. Сегодня — де-факто стандарт энтерпрайза: сотни тысяч установок.</p>", ""),
+    card("Почему так распространён", "<ul><li>Открытый код, ставится куда угодно</li><li>Огромная библиотека плагинов (~1900)</li><li>Работает с любым стеком и ОС</li></ul>", "accent"),
+    card("Области применения", "<ul><li>CI: сборка и тестирование</li><li>CD: развёртывание на окружения</li><li>Автоматизация рутины: бэкапы, отчёты, ночные задачи</li></ul>", "")
+  ) +
+  callout("Jenkins часто называют «старым, но всюду стоящим» — как Unix: некрасив, однако неубиваем и универсален.", ""),
+  "",
+  [["Jenkins", "https://www.jenkins.io/"]],
+  80,
+  {name: "Jenkins и автоматизация", time: "62:40"}
+);
+
+add(
+  "Архитектура Jenkins",
+  "Контроллер, агенты и executors",
+  flow([
+    ["Контроллер (controller)", "хранит конфигурации, очередь задач, веб-интерфейс"],
+    ["Агент (agent / node)", "машина, выполняющая шаги пайплайна"],
+    ["Executor", "слот выполнения: один агент — несколько параллельных job"],
+    ["Workspace", "рабочая директория job на агенте: checkout, сборка, артефакты"]
+  ]) +
+  two(
+    card("Почему агенты нужны отдельно", "<ul><li>Изоляция: падение сборки не рушит контроллер</li><li>Разные окружения: Linux, Windows, macOS-агенты</li><li>Масштабирование: нехватка слотов → новые агенты</li></ul>", "accent"),
+    card("Типовая схема", "<p>Разработчики push → webhook в контроллер → контроллер ставит job в очередь → свободный агент снимает задачу → отчёт и артефакты возвращаются на контроллер.</p>", "")
+  ) +
+  callout("Современная практика: агенты — одноразовые контейнеры в Kubernetes, стартующие под задачу и умирающие после неё.", "good"),
+  "",
+  [],
+  80,
+  {name: "Jenkins и автоматизация", time: "64:00"}
+);
+
+add(
+  "Jenkinsfile: пайплайн как код",
+  "Declarative Pipeline — вся логика CI в репозитории",
+  code("groovy · Jenkinsfile",
+"pipeline {\n" +
+"  agent any\n" +
+"  stages {\n" +
+"    stage('Install') {\n" +
+"      steps { sh 'npm ci' }\n" +
+"    }\n" +
+"    stage('Verify') {\n" +
+"      parallel {\n" +
+"        stage('Lint') { steps { sh 'npm run lint' } }\n" +
+"        stage('Unit tests') { steps { sh 'npm test' } }\n" +
+"      }\n" +
+"    }\n" +
+"    stage('Build image') {\n" +
+"      steps { sh 'docker build -t app:' + env.BUILD_NUMBER + ' .' }\n" +
+"    }\n" +
+"    stage('Push') {\n" +
+"      steps { sh 'docker push registry.example.com/app:' + env.BUILD_NUMBER }\n" +
+"    }\n" +
+"  }\n" +
+"  post {\n" +
+"    failure { echo 'Сборка упала — чиним в приоритетном порядке!' }\n" +
+"  }\n" +
+"}", "small") +
+  callout("Pipeline хранится рядом с кодом: изменение пайплайна проходит ревью и историю git, как и любой код.", "accent"),
+  "",
+  [],
+  100,
+  {name: "Jenkins и автоматизация", time: "65:20"}
+);
+
+add(
+  "Экосистема плагинов",
+  "Сила и слабость Jenkins одновременно",
+  two(
+    card("Что дают плагины", "<ul><li>Интеграции: GitHub/GitLab, Docker, Kubernetes, SonarQube</li><li>Шаги «из коробки»: публикация артефактов, нотификации в Slack</li><li>UI для визуализации: Blue Ocean показывает пайплайн графически</li></ul>", "good"),
+    card("Обратная сторона", "<ul><li>~1900 плагинов = разное качество и скорость обновлений</li><li>Обновление Jenkins — совместимость со старыми плагинами</li><li>Конфигурация через UI склонна к «расползанию» — лечится Jenkinsfile</li></ul>", "warn")
+  ) +
+  callout("Практический вывод: всё, что можно описать кодом — описывайте кодом; плагины — для интеграций, а не для бизнес-логики пайплайна.", "accent"),
+  "Экосистема — причина живучести Jenkins, но и источник боли. Отсылка к практике: крупные компании держат «золотой набор» версий плагинов и тестируют обновления на отдельном стенде.",
+  [],
+  70,
+  {name: "Jenkins и автоматизация", time: "67:00"}
+);
+
+add(
+  "GitLab CI и GitHub Actions",
+  "CI/CD, встроенный прямо в хостинг репозитория",
+  two(
+    card("GitLab CI", code("yaml · .gitlab-ci.yml",
+"stages: [verify, build, deploy]\n\n" +
+"lint-and-test:\n" +
+"  stage: verify\n" +
+"  image: node:20-alpine\n" +
+"  script:\n" +
+"    - npm ci\n" +
+"    - npm run lint\n" +
+"    - npm test\n\n" +
+"build-image:\n" +
+"  stage: build\n" +
+"  script: docker build -t app:$CI_COMMIT_SHORT_SHA .\n" +
+"  only: [main]", "small"), "accent"),
+    card("GitHub Actions", code("yaml · .github/workflows/ci.yml",
+"on: [push]\n" +
+"jobs:\n" +
+"  verify:\n" +
+"    runs-on: ubuntu-latest\n" +
+"    steps:\n" +
+"      - uses: actions/checkout@v4\n" +
+"      - uses: actions/setup-node@v4\n" +
+"        with: { node-version: 20 }\n" +
+"      - run: npm ci\n" +
+"      - run: npm test", "small"), "accent")
+  ) +
+  callout("Для ваших учебных проектов — начните с GitLab CI или GitHub Actions: нулевая инфраструктура, пайплайн — файл в репозитории.", "good"),
+  "",
+  [],
+  90,
+  {name: "Jenkins и автоматизация", time: "68:10"}
+);
+
+add(
+  "Сравнение серверов автоматизации",
+  "Как выбрать — и что учить первым",
+  table(
+    ["Критерий", "Jenkins", "GitLab CI", "GitHub Actions"],
+    [
+      ["Установка", "свой сервер, сам себе админ", "в составе GitLab (SaaS или self-hosted)", "облако GitHub, ничего ставить не надо"],
+      ["Конфигурация", "Jenkinsfile + плагины", ".gitlab-ci.yml рядом с кодом", "workflow-файлы рядом с кодом"],
+      ["Масштабирование агентов", "гибко, но своими руками", "Runners: shared и свои", "хостедные runner'ы + self-hosted"],
+      ["Типичная ниша", "энтерпрайз, гибридные схемы", "компании на GitLab", "open-source и продуктовые команды на GitHub"]
+    ]
+  ) +
+  callout("Концепции одни: job/stage/agent/artifact. Освоив одну систему, вы освоите все — отличаются синтаксис и хостинг.", "good"),
+  "",
+  [],
+  70,
+  {name: "Jenkins и автоматизация", time: "69:40"}
+);
+
+add(
+  "Выводы раздела: автоматизация пайплайнов",
+  "Что нужно запомнить о Jenkins и CI-серверах",
+  checks([
+    "Сервер CI — оркестратор: контроллер ставит задачи, агенты в чистых окружениях их выполняют",
+    "Jenkinsfile / .gitlab-ci.yml / workflow — пайплайн это код, лежит в репозитории",
+    "Переменные сборки (BUILD_NUMBER, CI_COMMIT_SHORT_SHA) — естественные теги версий",
+    "Плагины — интеграции; логика пайплайна — кодом",
+    "GitLab CI и GitHub Actions: тот же принцип, нулевая инфраструктура — лучший старт для учебных проектов"
+  ]) +
+  callout("Следующий раздел: приложение упаковано и доставлено — осталось настроить сам сервер. Это Ansible.", "accent"),
+  "Мостик: CI/CD доставляет приложение, но сервер, на котором оно бежит, тоже должен быть подготовлен: пакеты, nginx, пользователи, сертификаты. Ручная настройка серверов — та же болезнь, что и ручная сборка: лечится декларативным кодом.",
+  [],
+  70,
+  {name: "Jenkins и автоматизация", time: "70:50"}
+);
+
+/* ═══════════════ РАЗДЕЛ 7 · ANSIBLE И ИНФРАСТРУКТУРА КАК КОД ═══════════════ */
+
+add(
+  "Проблема настройки серверов",
+  "Snowflake servers: каждый сервер уникален — и это плохо",
+  two(
+    card("Ручная настройка приводит к", "<ul><li>Сервер «Прод-1» отличается от «Прод-2» никому неизвестными деталями</li><li>Обновление ОС: страшно, потому что «оно настроено по памяти»</li><li>Знание уходит вместе с админом — bus factor = 1</li><li>Восстановление после сбоя: дни раскопок</li></ul>", "bad"),
+    card("Нужно", "<ul><li>Описать сервер файлом: «каким он должен быть»</li><li>Применить описание к любому количеству машин</li><li>Изменение настройки = изменение файла + ревью</li><li>Восстановление сервера: применить тот же файл к новой VM</li></ul>", "good")
+  ) +
+  callout("Это Infrastructure as Code — инфраструктура как код: та же идея, что Dockerfile, но для серверов целиком.", "accent"),
+  "Термин «snowflake server» — каждая снежинка уникальна, но хрупка. Отсылка: легенда о «чёрном ящике» дата-центра, который никто не решается перезагрузить.",
+  [],
+  70,
+  {name: "Ansible и IaC", time: "72:00"}
+);
+
+add(
+  "Ansible: идея и устройство",
+  "Декларативная конфигурация без агентов",
+  '<p class="big">Ansible — инструмент управления конфигурацией: по декларативным описаниям (playbook) приводит серверы к желаемому состоянию. Работает по SSH, без установки агентов на целевые машины.</p>' +
+  three(
+    card("Инвентарь (inventory)", "<p>Список целевых машин в ini/yaml: группы серверов, адреса, переменные.</p>" +
+    code("ini · inventory.ini", "[web]\nprod-1.example.com\nprod-2.example.com\n\n[db]\ndb-1.example.com", "small"), ""),
+    card("Модули", "<p>Мелкие единицы работы: apt, copy, template, service, user. Каждый идемпотентен: повторный запуск безопасен.</p>", "accent"),
+    card("Playbook", "<p>Сценарий из задач: «поставить nginx», «скопировать конфиг», «запустить сервис».</p>", "")
+  ) +
+  callout("Ред Хат (Red Hat) развивает Ansible; написан на Python, расширяется собственными модулями.", ""),
+  "Три кита: inventory, модули, playbook. Ключевое свойство — идемпотентность: применение того же playbook дважды не ломает систему (второй раз — «уже есть, пропускаем»). Это принципиальное отличие от скриптов «install.sh», которые падают при повторном запуске. SSH без агентов — важное преимущество: нечего обновлять на сотнях серверов.",
+  [],
+  90,
+  {name: "Ansible и IaC", time: "73:10"}
+);
+
+add(
+  "Playbook: пример",
+  "Подготовка веб-сервера для нашего приложения",
+  code("yaml · deploy.yml",
+"- hosts: web\n" +
+"  become: yes\n" +
+"  tasks:\n" +
+"    - name: Установить nginx и Docker\n" +
+"      apt:\n" +
+"        name: [nginx, docker.io]\n" +
+"        state: present\n" +
+"        update_cache: yes\n\n" +
+"    - name: Развернуть конфиг nginx\n" +
+"      template:\n" +
+"        src: nginx.conf.j2\n" +
+"        dest: /etc/nginx/sites-enabled/app\n" +
+"      notify: restart nginx\n\n" +
+"    - name: Запустить контейнер приложения\n" +
+"      docker_container:\n" +
+"        name: student-app\n" +
+"        image: registry.example.com/app:0.1.0\n" +
+"        ports: ['80:3000']\n" +
+"        restart_policy: always\n\n" +
+"  handlers:\n" +
+"    - name: restart nginx\n" +
+"      service: { name: nginx, state: restarted }", "small") +
+  callout("Обратите внимание: Ansible не просто ставит пакеты — он разворачивает наш контейнер из раздела Docker. Цепочка замкнулась.", "good"),
+  "",
+  [],
+  90,
+  {name: "Ansible и IaC", time: "74:40"}
+);
+
+add(
+  "Terraform и облачная инфраструктура",
+  "Ansible настраивает серверы, Terraform создаёт ресурсы",
+  two(
+    card("Граница ответственности", "<ul><li><b>Terraform</b>: создать VM, сеть, балансировщик, DNS-запись — ресурсы облака</li><li><b>Ansible</b>: настроить созданное: пакеты, конфиги, сервисы, пользователи</li><li>Классическая связка: terraform apply → вывод IP → ansible-playbook</li></ul>", "accent"),
+    card("Принцип Terraform", "<p>HCL-файлы описывают желаемое состояние облака; команда <code>terraform apply</code> сравнивает файл с реальностью и вносит только необходимые изменения — «план» показывается перед применением.</p>", "")
+  ) +
+  callout("Облака (AWS, Yandex Cloud, Selectel) управляются так же декларативно, как серверы — через API, а не веб-консоль.", ""),
+  "",
+  [],
+  70,
+  {name: "Ansible и IaC", time: "76:10"}
+);
+
+add(
+  "Секреты и переменные окружения",
+  "Пароли в git — никогда; секреты — в менеджерах",
+  two(
+    card("Что нельзя", "<ul><li>.env с паролем к БД в репозитории — классическая утечка</li><li>Пароли в Dockerfile, Jenkinsfile, playbook в открытом виде</li><li>«Временный» root-пароль, который живёт годами</li></ul>", "bad"),
+    card("Что вместо этого", "<ul><li>Менеджеры секретов: HashiCorp Vault, Ansible Vault, SOPS</li><li>Встроенные хранилища CI: GitLab CI/CD Variables, Jenkins Credentials</li><li>Принцип наименьших прав: CI деплоит только то, что нужно</li></ul>", "good")
+  ) +
+  callout("Правило раздела: любой секрет попадает на сервер из хранилища во время выполнения, а не из git-истории.", "accent"),
+  "Типовая утечка: разработчик коммитит .env, потом удаляет файл — но история git помнит всё. Отсюда: секреты нельзя «вычищать задним числом», их можно только отозвать. DevSecOps-проверки сканеров секретов (gitleaks, trufflehog) — стандартный gate в пайплайне.",
+  [],
+  80,
+  {name: "Ansible и IaC", time: "77:20"}
+);
+
+/* ═══════════════ РАЗДЕЛ 8 · БОЛЬШАЯ КАРТИНА И ИТОГИ ═══════════════ */
+
+add(
+  "Kubernetes и оркестрация: обзор",
+  "Что происходит, когда контейнеров становится сотни",
+  '<p class="big">Kubernetes (K8s) — система оркестрации контейнеров: следит, чтобы заданное количество реплик приложения работало, перезапускает упавшие, распределяет нагрузку и раскатывает обновления по кластеру.</p>' +
+  flow([
+    ["Deployment", "желаемое состояние: «3 реплики app:0.1.0»"],
+    ["Pods", "группа контейнеров — единица запуска"],
+    ["Service", "стабильная точка входа на поды"],
+    ["Ingress", "HTTP-маршрутизация извне"],
+    ["Rollout", "обновление по одному поду — rolling из раздела CD"]
+  ]) +
+  callout("На этой лекции — только карта: K8s — отдельный большой курс. Главное сейчас: декларативность и самовосстановление.", "warn"),
+  "",
+  [["Kubernetes", "https://kubernetes.io/"]],
+  80,
+  {name: "Итоги и практика", time: "78:40"}
+);
+
+add(
+  "Наблюдаемость: метрики, логи, трассировки",
+  "Сервис, о котором ничего не известно, — неуправляем",
+  three(
+    card("Метрики", "<p>Числа во времени: RPS, latency, ошибки, память. Сбор: Prometheus. Визуализация и алерты: Grafana.</p><small>Алерт «5xx больше 1% в течение 5 минут» будит дежурного раньше пользователей</small>", "accent"),
+    card("Логи", "<p>Структурированные записи событий: JSON-логи приложения, агрегация через Loki или ELK-стек.</p><small>docker logs — минимальный вариант; промышленный — централизованный поиск по всем серверам</small>", ""),
+    card("Трассировки", "<p>Цепочка запроса через сервисы: фронтенд → API → БД. OpenTelemetry — общий стандарт.</p><small>Показывает, где именно теряются 300 мс</small>", "accent")
+  ) +
+  callout("Это замыкает цикл DevOps: мониторинг → сигнал → изменение → снова в пайплайн.", "good"),
+  "Три столпа наблюдаемости. Пример инцидента: latency выросла — метрика показала рост, логи нашли медленный SQL-запрос, трейс показал, что тормозит именно подключение к БД. DevOps-цикл: фикс → CI → CD → наблюдение за метриками. Дежурства и runbooks — стандартная часть работы.",
+  [],
+  80,
+  {name: "Итоги и практика", time: "80:00"}
+);
+
+add(
+  "Путь вашего приложения: итоговая схема",
+  "Всё, пройденное за лекцию, — одна цепочка",
+  flow([
+    ["Вы пишете код", "фича в ветке, push"],
+    ["Merge request", "ревью + CI: lint, тесты, сборка"],
+    ["Docker", "образ с тегом git SHA → реестр"],
+    ["CD", "staging автоматически, e2e-тесты"],
+    ["Prod", "канарея, метрики, алерты"],
+    ["Ansible/IaC", "серверы подготовлены кодом"],
+    ["Мониторинг", "сигнал → следующая итерация"]
+  ]),
+  "",
+  [],
+  90,
+  {name: "Итоги и практика", time: "81:20"}
+);
+
+add(
+  "Резюме лекции",
+  "Десять тезисов, которые должны остаться",
+  two(
+    checks([
+      "DevOps — культура и практики, а не набор инструментов; ответственность за продукт не заканчивается коммитом",
+      "CI: мелкие слияния, автоматические сборка и тесты, зелёная main — всегда",
+      "Система сборки по манифесту даёт воспроизводимый артефакт",
+      "CD: один артефакт продвигается по окружениям; развёртывание — штатная операция, а не событие",
+      "Docker упаковывает приложение с окружением; образ неизменяем, версионируется тегами"
+    ]),
+    checks([
+      "Jenkins/GitLab CI/Actions — оркестраторы одних и тех же концепций: пайплайн это код",
+      "Ansible приводит серверы к описанному в файле состоянию; идемпотентность — ключ",
+      "IaC и Terraform распространяют декларативность на сами ресурсы облака",
+      "Секреты живут в менеджерах секретов, никогда в git",
+      "Мониторинг замыкает цикл: без наблюдаемости частые релизы невозможны"
+    ])
+  ) +
+  callout("Формула DevOps: автоматизировать путь кода до пользователя и наблюдать результат — и повторять.", "good"),
+  "",
+  [],
+  80,
+  {name: "Итоги и практика", time: "84:30"}
+);
+
+/* ─────────────── ДВИЖОК ─────────────── */
+
+if (slides.length === 0) {
+  add("Пустая презентация", "Добавьте слайды через add(...)", "");
+}
+
+const formatTime = seconds => {
+  const m = Math.floor(seconds/60);
+  const s = seconds%60;
+  return `${m}:${String(s).padStart(2,"0")}`;
+};
+
+const deck = document.getElementById("deck");
+const jump = document.getElementById("jump");
+const dots = document.getElementById("dots");
+let elapsed = 0;
+
+slides.forEach((s,index)=>{
+  const n=index+1;
+  s.start=elapsed;
+  s.end=elapsed+s.duration;
+  elapsed=s.end;
+
+  const article=document.createElement("section");
+  article.className=`slide slide-${n}${n===1?" active":""}`;
+  article.dataset.slide=n;
+  article.id=`slide-${n}`;
+  article.setAttribute("aria-label",`${n}. ${s.title}`);
+  article.setAttribute("aria-hidden",n===1?"false":"true");
+
+  const titleTag=n===1?"h1":"h2";
+  const source=s.refs[0];
+  article.innerHTML=`
+    <div class="gradient-mesh" aria-hidden="true">
+      <div class="blob"></div><div class="blob"></div>
+    </div>
+    <div class="content">
+      <header class="reveal">
+        <div class="eyebrow">${esc(s.section.name)}</div>
+        <${titleTag}>${esc(s.title)}</${titleTag}>
+        <p class="subtitle">${esc(s.subtitle)}</p>
+      </header>
+      <div class="body">${s.body}</div>
+      <footer class="footer">
+        <span>${esc(s.section.time || "")}</span>
+        <span>${source
+          ?`<a href="${esc(source[1])}" target="_blank" rel="noopener noreferrer">${esc(source[0])} ↗</a>`
+          :""}</span>
+        <span>${String(n).padStart(2,"0")} / ${String(slides.length).padStart(2,"0")}</span>
+      </footer>
+    </div>`;
+  deck.appendChild(article);
+
+  const option=document.createElement("option");
+  option.value=n;
+  option.textContent=`${String(n).padStart(2,"0")} · ${s.title}`;
+  jump.appendChild(option);
+
+  const dot=document.createElement("button");
+  dot.type="button";
+  dot.className="dot"+(n===1?" active":"");
+  dot.title=`${n}. ${s.title}`;
+  dot.setAttribute("aria-label",dot.title);
+  dot.addEventListener("click",()=>goToSlide(n,true));
+  dots.appendChild(dot);
+});
+
+const totalSeconds = elapsed;
+
+let current=1;
+let readMode=false;
+let notesVisible=false;
+let presenting=false;
+
+function fit() {
+  const screen=document.getElementById("screen");
+  let scale;
+  if (presenting) {
+    scale=Math.min(window.innerWidth/1200,window.innerHeight/675);
+  } else {
+    scale=screen.clientWidth/1200;
+  }
+  document.documentElement.style.setProperty("--scale",String(scale));
+  if (readMode && !presenting) {
+    screen.style.height=`${((675+24)*slides.length-24)*scale}px`;
+  } else {
+    screen.style.height="";
+  }
+}
+
+function renderNotes() {
+  const s=slides[current-1];
+  const note=document.getElementById("notes");
+  const refs=s.refs.map(r=>
+    `<a href="${esc(r[1])}" target="_blank" rel="noopener noreferrer">${esc(r[0])}</a>`
+  ).join(" · ");
+  note.innerHTML=`
+    <h3>${current}. ${esc(s.title)}</h3>
+    <p class="time">${formatTime(s.start)}–${formatTime(s.end)}
+      · на слайд ${s.duration} сек.
+      · раздел «${esc(s.section.name)}»</p>
+    ${s.notes.split("\n").map(p=>`<p>${esc(p)}</p>`).join("")}
+    ${refs?`<p><b>Документация:</b> ${refs}</p>`:""}`;
+  note.hidden=!notesVisible;
+}
+
+function goToSlide(n,scroll=false) {
+  n=Math.max(1,Math.min(slides.length,Number(n)||1));
+  current=n;
+  document.querySelectorAll(".slide").forEach((el,i)=>{
+    el.classList.toggle("active",i+1===current);
+    el.setAttribute("aria-hidden",readMode||i+1===current?"false":"true");
+  });
+  document.querySelectorAll(".dot").forEach((el,i)=>{
+    el.classList.toggle("active",i+1===current);
+    el.setAttribute("aria-current",i+1===current?"step":"false");
+  });
+  jump.value=String(current);
+  document.getElementById("counter").textContent=`${current} / ${slides.length}`;
+  document.getElementById("progress").style.width=`${current/slides.length*100}%`;
+  document.getElementById("prev").disabled=current===1;
+  document.getElementById("next").disabled=current===slides.length;
+
+  const s=slides[current-1];
+  document.getElementById("timing").textContent=
+    `${formatTime(s.start)}–${formatTime(s.end)} / ${formatTime(totalSeconds)} · ${s.duration} сек.`;
+
+  renderNotes();
+  try { history.replaceState(null,"",`#slide=${current}`); } catch {}
+  if(readMode&&scroll) {
+    document.getElementById(`slide-${current}`).scrollIntoView({
+      behavior:"smooth",block:"start"
+    });
+  }
+}
+
+function changeSlide(delta) {goToSlide(current+delta,true)}
+
+function setReadMode(value) {
+  if(presenting) exitPresentation();
+  readMode=Boolean(value);
+  document.body.classList.toggle("read",readMode);
+  document.getElementById("readMode").classList.toggle("active",readMode);
+  document.getElementById("slideMode").classList.toggle("active",!readMode);
+  fit();
+  goToSlide(current,readMode);
+}
+
+function toggleNotes() {
+  notesVisible=!notesVisible;
+  document.getElementById("notesButton").classList.toggle("active",notesVisible);
+  renderNotes();
+}
+
+async function startPresentation() {
+  if(presenting) {await exitPresentation();return}
+  if(readMode) setReadMode(false);
+  presenting=true;
+  document.body.classList.add("present");
+  try {
+    if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+  } catch {
+    // Режим презентации работает и без Fullscreen API.
+  }
+  fit();
+}
+
+async function exitPresentation() {
+  presenting=false;
+  document.body.classList.remove("present");
+  try {
+    if(document.fullscreenElement) await document.exitFullscreen();
+  } catch {}
+  fit();
+}
+
+document.getElementById("prev").onclick=()=>changeSlide(-1);
+document.getElementById("next").onclick=()=>changeSlide(1);
+document.getElementById("full").onclick=startPresentation;
+document.getElementById("slideMode").onclick=()=>setReadMode(false);
+document.getElementById("readMode").onclick=()=>setReadMode(true);
+document.getElementById("notesButton").onclick=toggleNotes;
+jump.onchange=()=>goToSlide(jump.value,true);
+
+document.addEventListener("keydown",e=>{
+  if(e.target.closest("input,textarea,select,button,a,[contenteditable=true]")) return;
+  const key=e.key.toLowerCase();
+  if(["arrowright","arrowleft"," ","pagedown","pageup","home","end"].includes(key))
+    e.preventDefault();
+  if(key==="arrowright"||key===" "||key==="pagedown") changeSlide(1);
+  if(key==="arrowleft"||key==="pageup") changeSlide(-1);
+  if(key==="home") goToSlide(1,true);
+  if(key==="end") goToSlide(slides.length,true);
+  if(key==="n"||key==="т") toggleNotes();
+  if(key==="r"||key==="к") setReadMode(!readMode);
+  if(key==="f"||key==="а") startPresentation();
+  if(key==="escape"&&presenting) exitPresentation();
+});
+
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement&&presenting) {
+    presenting=false;
+    document.body.classList.remove("present");
+  }
+  fit();
+});
+
+let touchX=0,touchY=0;
+document.getElementById("screen").addEventListener("touchstart",e=>{
+  touchX=e.changedTouches[0].clientX;
+  touchY=e.changedTouches[0].clientY;
+},{passive:true});
+
+document.getElementById("screen").addEventListener("touchend",e=>{
+  if(readMode) return;
+  const dx=touchX-e.changedTouches[0].clientX;
+  const dy=touchY-e.changedTouches[0].clientY;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)
+    changeSlide(dx>0?1:-1);
+},{passive:true});
+
+document.addEventListener("click",async e=>{
+  const button=e.target.closest(".copy");
+  if(!button) return;
+  const text=button.closest(".code").querySelector("pre").textContent;
+  try {
+    if(navigator.clipboard&&window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea=document.createElement("textarea");
+      textarea.value=text;
+      textarea.style.cssText="position:fixed;left:-9999px;top:0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied=document.execCommand("copy");
+      textarea.remove();
+      if(!copied) throw new Error("Copy unavailable");
+    }
+    button.textContent="Скопировано";
+  } catch {
+    button.textContent="Выделите код";
+  }
+  setTimeout(()=>button.textContent="Копировать",1500);
+});
+
+window.addEventListener("resize",fit);
+const initial=/slide=(\d+)/.exec(location.hash);
+goToSlide(initial?Number(initial[1]):1);
+fit();
+if(document.fonts) document.fonts.ready.then(fit);
+</script>
+</body>
+</html>
