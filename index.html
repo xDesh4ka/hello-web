@@ -328,6 +328,28 @@ tr:last-child td {border-bottom:0}
   .slide:last-child {break-after:auto}
   .gradient-mesh,.copy {display:none}
 }
+
+@media (max-width: 1240px), (max-height: 700px) {
+  /* Present: если JS не задал --scale, считаем сами */
+  .present .deck {
+    --scale: min(calc(100dvw / 1200), calc(100dvh / 675));
+  }
+
+  /* Read: колода масштабируется под ширину экрана */
+  .read .deck {
+    transform: none;
+    zoom: calc((100dvw - 20px) / 1200);
+  }
+
+  .read .screen {
+    overflow-x: hidden;
+  }
+
+  /* Убираем iOS-автозум при фокусе на select */
+  .controller select {
+    font-size: 16px;
+  }
+}
 </style>
 </head>
 <body>
